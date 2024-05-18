@@ -1,9 +1,12 @@
 import { Produto as ProdutoType } from '../../App'
 import * as S from './styles'
+import { useSelector, useDispatch } from 'react-redux'
+import { adicionar, removerCarrinho } from '../../store/reducers/carrinho'
+import { RootReducer } from '../../store'
+import { adicionarFav, remover } from '../../store/reducers/favoritos'
 
 type Props = {
   produto: ProdutoType
-  aoComprar: (produto: ProdutoType) => void
   favoritar: (produto: ProdutoType) => void
   estaNosFavoritos: boolean
 }
@@ -13,12 +16,15 @@ export const paraReal = (valor: number) =>
     valor
   )
 
-const ProdutoComponent = ({
-  produto,
-  aoComprar,
-  favoritar,
-  estaNosFavoritos
-}: Props) => {
+const ProdutoComponent = ({ produto }: Props) => {
+  const favoritos = useSelector((state: RootReducer) => state.favorito.itens)
+  const estaNosFavoritos = favoritos.find((item) => item.id === produto.id)
+
+  const carrinho = useSelector((state: RootReducer) => state.carrinho.itens)
+  const estaNoCarrinho = carrinho.find((item) => item.id === produto.id)
+
+  const dispatch = useDispatch()
+
   return (
     <S.Produto>
       <S.Capa>
@@ -28,13 +34,27 @@ const ProdutoComponent = ({
       <S.Prices>
         <strong>{paraReal(produto.preco)}</strong>
       </S.Prices>
-      <S.BtnComprar onClick={() => favoritar(produto)} type="button">
+      <S.BtnComprar
+        onClick={() =>
+          estaNosFavoritos
+            ? dispatch(remover(produto))
+            : dispatch(adicionarFav(produto))
+        }
+        type="button"
+      >
         {estaNosFavoritos
           ? '- Remover dos favoritos'
           : '+ Adicionar aos favoritos'}
       </S.BtnComprar>
-      <S.BtnComprar onClick={() => aoComprar(produto)} type="button">
-        Adicionar ao carrinho
+      <S.BtnComprar
+        onClick={() =>
+          estaNoCarrinho
+            ? dispatch(removerCarrinho(produto))
+            : dispatch(adicionar(produto))
+        }
+        type="button"
+      >
+        {estaNoCarrinho ? '- Remover do carrinho' : '+ Adicionar ao carrinho'}
       </S.BtnComprar>
     </S.Produto>
   )
